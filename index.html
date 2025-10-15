@@ -1,0 +1,1625 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Neon Nebula OS</title>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Orbitron:wght@400;700&family=Work+Sans:wght@300;500;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --primary: #7a5cff;
+      --accent: #37d7ff;
+      --glow: rgba(64, 204, 255, 0.45);
+      --surface: rgba(20, 22, 35, 0.85);
+      --surface-solid: #101323;
+      --text: #f5faff;
+      --muted: #94a3c3;
+      --danger: #ff5c7a;
+      font-size: 16px;
+    }
+
+    * {
+      box-sizing: border-box;
+      user-select: none;
+    }
+
+    body {
+      margin: 0;
+      font-family: 'Work Sans', sans-serif;
+      background: radial-gradient(circle at 20% 20%, rgba(125, 95, 255, 0.4), transparent 50%),
+        radial-gradient(circle at 80% 10%, rgba(49, 203, 255, 0.35), transparent 45%),
+        radial-gradient(circle at 10% 80%, rgba(255, 95, 150, 0.28), transparent 50%),
+        #050716;
+      color: var(--text);
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    #desktop {
+      position: relative;
+      height: calc(100vh - 48px);
+      width: 100vw;
+      padding: 24px;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+      grid-auto-rows: 120px;
+      gap: 24px;
+    }
+
+    .desktop-icon {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      border-radius: 18px;
+      backdrop-filter: blur(8px);
+      background: rgba(14, 16, 30, 0.35);
+      box-shadow: inset 0 0 0 1px rgba(122, 92, 255, 0.18), 0 12px 30px rgba(3, 10, 36, 0.45);
+      cursor: pointer;
+      transition: transform 0.25s, box-shadow 0.25s;
+      padding: 16px;
+    }
+
+    .desktop-icon:hover {
+      transform: translateY(-4px);
+      box-shadow: inset 0 0 0 1px rgba(122, 92, 255, 0.45), 0 18px 38px rgba(20, 30, 80, 0.65);
+    }
+
+    .desktop-icon span {
+      margin-top: 12px;
+      font-size: 0.85rem;
+      text-align: center;
+      color: var(--muted);
+    }
+
+    .icon-glyph {
+      font-size: 2.4rem;
+      color: var(--accent);
+      text-shadow: 0 0 18px rgba(55, 215, 255, 0.75);
+    }
+
+    #taskbar {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      height: 48px;
+      display: flex;
+      align-items: center;
+      padding: 0 18px;
+      background: rgba(6, 8, 22, 0.92);
+      box-shadow: 0 -6px 18px rgba(3, 7, 18, 0.7);
+      backdrop-filter: blur(12px);
+      z-index: 1000;
+      gap: 12px;
+    }
+
+    #start-button {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-family: 'Orbitron', sans-serif;
+      letter-spacing: 0.08em;
+      font-weight: 700;
+      color: var(--accent);
+      cursor: pointer;
+      padding: 8px 14px;
+      border-radius: 999px;
+      background: linear-gradient(120deg, rgba(122, 92, 255, 0.35), rgba(55, 215, 255, 0.15));
+      box-shadow: 0 0 12px rgba(122, 92, 255, 0.35);
+      transition: transform 0.2s;
+    }
+
+    #start-button:hover {
+      transform: translateY(-2px);
+    }
+
+    #taskbar-clock {
+      margin-left: auto;
+      font-family: 'JetBrains Mono', monospace;
+      color: var(--muted);
+    }
+
+    #taskbar-apps {
+      display: flex;
+      gap: 8px;
+    }
+
+    .taskbar-item {
+      padding: 8px 12px;
+      border-radius: 12px;
+      background: rgba(20, 24, 45, 0.7);
+      color: var(--muted);
+      font-size: 0.8rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .taskbar-item.active {
+      background: rgba(122, 92, 255, 0.45);
+      color: var(--text);
+      box-shadow: 0 0 12px rgba(122, 92, 255, 0.4);
+    }
+
+    #start-menu {
+      position: fixed;
+      bottom: 56px;
+      left: 18px;
+      width: 420px;
+      max-height: 540px;
+      background: rgba(10, 14, 32, 0.96);
+      border-radius: 18px;
+      border: 1px solid rgba(122, 92, 255, 0.35);
+      box-shadow: 0 28px 60px rgba(4, 8, 20, 0.8);
+      backdrop-filter: blur(18px);
+      padding: 18px;
+      display: none;
+      z-index: 1200;
+    }
+
+    #start-menu.active {
+      display: block;
+      animation: drop 0.18s ease-out;
+    }
+
+    @keyframes drop {
+      from {
+        opacity: 0;
+        transform: translateY(20px) scale(0.96);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+    }
+
+    .start-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+    }
+
+    .start-tile {
+      background: rgba(24, 28, 55, 0.75);
+      border-radius: 16px;
+      padding: 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .start-tile:hover {
+      transform: translateY(-6px);
+      box-shadow: 0 16px 28px rgba(12, 18, 40, 0.75);
+      background: rgba(34, 38, 65, 0.9);
+    }
+
+    .start-tile span {
+      font-size: 0.85rem;
+      color: var(--muted);
+    }
+
+    .app-window {
+      position: absolute;
+      top: 80px;
+      left: 80px;
+      width: 640px;
+      height: 440px;
+      background: rgba(10, 14, 32, 0.94);
+      backdrop-filter: blur(16px);
+      border-radius: 20px;
+      box-shadow: 0 28px 60px rgba(5, 7, 20, 0.75);
+      border: 1px solid rgba(122, 92, 255, 0.35);
+      display: none;
+      flex-direction: column;
+      overflow: hidden;
+      z-index: 900;
+    }
+
+    .app-window.active {
+      display: flex;
+    }
+
+    .window-header {
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      background: linear-gradient(120deg, rgba(122, 92, 255, 0.35), rgba(55, 215, 255, 0.2));
+      color: var(--text);
+      cursor: move;
+      user-select: none;
+    }
+
+    .window-title {
+      font-family: 'Orbitron', sans-serif;
+      letter-spacing: 0.05em;
+      font-size: 0.95rem;
+    }
+
+    .window-actions {
+      margin-left: auto;
+      display: flex;
+      gap: 8px;
+    }
+
+    .window-actions button {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      border: none;
+      cursor: pointer;
+      background: rgba(255, 255, 255, 0.2);
+      color: var(--text);
+      font-weight: 700;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .window-content {
+      flex: 1;
+      padding: 16px;
+      overflow: auto;
+      color: var(--text);
+    }
+
+    button, input, textarea, select {
+      font-family: inherit;
+      border-radius: 12px;
+      border: 1px solid rgba(122, 92, 255, 0.35);
+      background: rgba(18, 22, 40, 0.9);
+      color: var(--text);
+      padding: 8px 12px;
+    }
+
+    button {
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    button:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 8px 18px rgba(122, 92, 255, 0.35);
+    }
+
+    textarea {
+      width: 100%;
+      height: 100%;
+      resize: none;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    .text-editor-content {
+      background: rgba(5, 8, 18, 0.8);
+      border-radius: 14px;
+      padding: 16px;
+      min-height: 280px;
+      overflow-y: auto;
+    }
+
+    .text-editor-content[contenteditable="true"]:focus {
+      outline: 2px dashed rgba(122, 92, 255, 0.6);
+    }
+
+    #terminal-output {
+      background: #05070f;
+      color: var(--accent);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.88rem;
+      border-radius: 14px;
+      padding: 16px;
+      height: 280px;
+      overflow-y: auto;
+      box-shadow: inset 0 0 0 1px rgba(55, 215, 255, 0.25);
+    }
+
+    #terminal-input {
+      width: 100%;
+      margin-top: 12px;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .file-manager {
+      display: grid;
+      grid-template-columns: 220px 1fr;
+      gap: 16px;
+      height: 100%;
+    }
+
+    .file-tree, .file-preview {
+      background: rgba(4, 6, 16, 0.8);
+      border-radius: 16px;
+      padding: 12px;
+      overflow-y: auto;
+    }
+
+    .file-node {
+      padding: 8px;
+      border-radius: 10px;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      transition: background 0.2s;
+    }
+
+    .file-node:hover {
+      background: rgba(122, 92, 255, 0.25);
+    }
+
+    .file-node span {
+      pointer-events: none;
+    }
+
+    .timeline {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+      gap: 12px;
+      margin-top: 12px;
+    }
+
+    .clip-card {
+      background: rgba(20, 22, 40, 0.85);
+      border-radius: 12px;
+      padding: 12px;
+      font-size: 0.8rem;
+    }
+
+    .paint-toolbar {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    canvas {
+      border-radius: 16px;
+      background: #02030b;
+      box-shadow: inset 0 0 0 1px rgba(122, 92, 255, 0.25);
+    }
+
+    #game canvas {
+      width: 100%;
+      height: 280px;
+      background: radial-gradient(circle, rgba(37, 42, 75, 0.4), rgba(4, 6, 16, 0.9));
+      border-radius: 16px;
+    }
+
+    .system-widget {
+      display: grid;
+      gap: 12px;
+      margin-top: 18px;
+    }
+
+    .widget-card {
+      background: rgba(12, 16, 32, 0.85);
+      border-radius: 16px;
+      padding: 14px;
+      display: grid;
+      gap: 6px;
+      font-size: 0.85rem;
+      box-shadow: inset 0 0 0 1px rgba(122, 92, 255, 0.25);
+    }
+
+    .badge {
+      background: rgba(122, 92, 255, 0.22);
+      padding: 3px 8px;
+      border-radius: 999px;
+      font-size: 0.7rem;
+      color: var(--accent);
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+    }
+
+    .notification {
+      position: fixed;
+      top: 24px;
+      right: 24px;
+      padding: 16px 20px;
+      background: rgba(10, 14, 32, 0.95);
+      border-radius: 16px;
+      border: 1px solid rgba(122, 92, 255, 0.45);
+      box-shadow: 0 20px 44px rgba(3, 8, 18, 0.65);
+      display: none;
+      z-index: 1500;
+    }
+
+    .floating-orb {
+      position: absolute;
+      width: 320px;
+      height: 320px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(122, 92, 255, 0.25), transparent 70%);
+      pointer-events: none;
+      animation: drift 16s ease-in-out infinite;
+      filter: blur(0px);
+    }
+
+    @keyframes drift {
+      0%, 100% {
+        transform: translate(0, 0) scale(1);
+      }
+      50% {
+        transform: translate(18px, -22px) scale(1.08);
+      }
+    }
+
+    #diagnostics {
+      display: grid;
+      gap: 16px;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      margin-top: 12px;
+    }
+
+    .meter {
+      background: rgba(4, 6, 16, 0.9);
+      border-radius: 14px;
+      padding: 12px;
+    }
+
+    .meter-bar {
+      margin-top: 8px;
+      height: 8px;
+      border-radius: 999px;
+      background: rgba(35, 42, 68, 0.8);
+      overflow: hidden;
+    }
+
+    .meter-fill {
+      height: 100%;
+      border-radius: 999px;
+      background: linear-gradient(90deg, rgba(122, 92, 255, 0.8), rgba(55, 215, 255, 0.8));
+      transition: width 0.3s ease-in-out;
+    }
+
+    .badge-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .chip {
+      background: rgba(55, 215, 255, 0.18);
+      border-radius: 999px;
+      padding: 6px 10px;
+      font-size: 0.72rem;
+      color: var(--accent);
+    }
+
+    .status-leds {
+      display: flex;
+      gap: 10px;
+      margin-top: 8px;
+    }
+
+    .led {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.2);
+      box-shadow: 0 0 10px rgba(55, 215, 255, 0.5);
+      animation: pulse 2.6s ease-in-out infinite;
+    }
+
+    .led:nth-child(2) {
+      animation-delay: 0.6s;
+    }
+
+    .led:nth-child(3) {
+      animation-delay: 1.2s;
+    }
+
+    @keyframes pulse {
+      0%, 100% {
+        opacity: 0.4;
+      }
+      50% {
+        opacity: 1;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="floating-orb" style="top: -160px; left: -80px;"></div>
+  <div class="floating-orb" style="bottom: -180px; right: -60px;"></div>
+  <div id="desktop"></div>
+
+  <div id="taskbar">
+    <div id="start-button">
+      <span class="icon-glyph">✦</span>
+      NEON
+    </div>
+    <div id="taskbar-apps"></div>
+    <div id="taskbar-clock"></div>
+  </div>
+
+  <div id="start-menu">
+    <h3 style="margin-top:0; margin-bottom:12px; font-family:'Orbitron',sans-serif; letter-spacing:0.16em; text-transform:uppercase; color:var(--accent);">Constellation Apps</h3>
+    <div class="start-grid" id="start-grid"></div>
+    <div class="system-widget">
+      <div class="widget-card">
+        <div class="badge">Telemetry</div>
+        <div id="diagnostics"></div>
+      </div>
+      <div class="widget-card">
+        <div class="badge">Mood Driver</div>
+        <div>“The universe is self-debugging. You only need to watch the logs.”</div>
+        <div class="status-leds">
+          <div class="led"></div>
+          <div class="led"></div>
+          <div class="led"></div>
+        </div>
+        <div class="badge-grid">
+          <div class="chip">Nebula UX Certified</div>
+          <div class="chip">Quasar Ready</div>
+          <div class="chip">Photon Secure</div>
+          <div class="chip">Zero-G Optimized</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="notification" id="notification"></div>
+
+  <template id="window-template">
+    <div class="app-window" data-app="">
+      <div class="window-header">
+        <span class="window-title"></span>
+        <div class="window-actions">
+          <button class="minimize">–</button>
+          <button class="close">×</button>
+        </div>
+      </div>
+      <div class="window-content"></div>
+    </div>
+  </template>
+
+  <div id="windows-layer"></div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.32.3/ace.js" integrity="sha512-5oYGDnBlQ9PUJUrpHJDKZMT4dFwtjDQr3SwQp2Zbgn+biRmV5ew5AXReJ6eVxVwugN1Rn/t/BEeo/ML22R8MvQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <script src="https://cdn.jsdelivr.net/pyodide/v0.23.4/full/pyodide.js"></script>
+  <script>
+    const desktop = document.getElementById('desktop');
+    const startButton = document.getElementById('start-button');
+    const startMenu = document.getElementById('start-menu');
+    const taskbarApps = document.getElementById('taskbar-apps');
+    const taskbarClock = document.getElementById('taskbar-clock');
+    const windowsLayer = document.getElementById('windows-layer');
+    const notification = document.getElementById('notification');
+
+    const apps = [
+      {
+        id: 'text-studio',
+        name: 'Celestial Notebook',
+        glyph: '📝',
+        description: 'Markdown-aware prose & journal',
+        iconHint: 'Compose cosmic thoughts',
+        desktop: true,
+        content: () => {
+          return `
+            <div class="toolbar">
+              <button data-command="bold">Bold</button>
+              <button data-command="italic">Italic</button>
+              <button data-command="insertUnorderedList">Bullets</button>
+              <select id="note-style">
+                <option value="p">Paragraph</option>
+                <option value="h1">Heading 1</option>
+                <option value="h2">Heading 2</option>
+                <option value="quote">Quote</option>
+              </select>
+              <button id="export-markdown">Export Markdown</button>
+              <button id="inject-poem">Surprise Me</button>
+            </div>
+            <div class="text-editor-content" id="text-editor" contenteditable="true"></div>
+            <textarea id="markdown-output" style="display:none; margin-top:12px; height:160px;"></textarea>
+          `;
+        },
+        onOpen: (win) => {
+          const editor = win.querySelector('#text-editor');
+          editor.innerHTML = localStorage.getItem('neo_text_buffer') || '<h2>Start a New Stardust Log</h2><p>Write freely, the cosmos listens...</p>';
+          editor.addEventListener('input', () => {
+            localStorage.setItem('neo_text_buffer', editor.innerHTML);
+          });
+
+          win.querySelectorAll('.toolbar button[data-command]').forEach(btn => {
+            btn.addEventListener('click', () => {
+              document.execCommand(btn.dataset.command, false);
+              editor.focus();
+            });
+          });
+
+          win.querySelector('#note-style').addEventListener('change', (e) => {
+            if (e.target.value === 'quote') {
+              document.execCommand('formatBlock', false, 'blockquote');
+            } else {
+              document.execCommand('formatBlock', false, e.target.value);
+            }
+            editor.focus();
+          });
+
+          win.querySelector('#export-markdown').addEventListener('click', () => {
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = editor.innerHTML;
+            tempDiv.querySelectorAll('h1').forEach(h => h.outerHTML = `# ${h.textContent}`);
+            tempDiv.querySelectorAll('h2').forEach(h => h.outerHTML = `## ${h.textContent}`);
+            tempDiv.querySelectorAll('blockquote').forEach(q => q.outerHTML = `> ${q.textContent}`);
+            tempDiv.querySelectorAll('li').forEach(li => li.outerHTML = `- ${li.textContent}`);
+            const markdown = tempDiv.innerText.trim();
+            const output = win.querySelector('#markdown-output');
+            output.style.display = 'block';
+            output.value = markdown;
+            toast('Markdown exported inside the window. Copy away!');
+          });
+
+          win.querySelector('#inject-poem').addEventListener('click', () => {
+            const lines = [
+              'Starships log dreams in UTF-8 starlight.',
+              'Cursor comets draw tail-trails across time.',
+              'Breakpoints shimmer like auroras for the patient.',
+              'Every newline is a new horizon.'
+            ];
+            const random = lines[Math.floor(Math.random() * lines.length)];
+            document.execCommand('insertHTML', false, `<p class="quote">${random}</p>`);
+            editor.focus();
+            toast('✨ Nebula Muse delivered a fresh mantra!');
+          });
+        }
+      },
+      {
+        id: 'code-forge',
+        name: 'Photon Code Forge',
+        glyph: '💻',
+        description: 'Ace-powered code lab with live preview',
+        iconHint: 'Run luminous snippets',
+        desktop: true,
+        content: () => {
+          return `
+            <div class="toolbar">
+              <select id="language-select">
+                <option value="javascript">JavaScript</option>
+                <option value="html">HTML</option>
+                <option value="css">CSS</option>
+                <option value="python">Python (via Pyodide)</option>
+              </select>
+              <button id="run-code">Run</button>
+              <button id="save-snippet">Save to Vault</button>
+              <button id="load-snippet">Load Vault</button>
+            </div>
+            <div id="code-editor" style="height:220px; border-radius:14px; overflow:hidden;"></div>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:12px;">
+              <iframe id="preview" title="Preview" style="height:220px; border-radius:14px; background:#050810;"></iframe>
+              <pre id="execution-log" style="margin:0; background:#050810; border-radius:14px; padding:12px; overflow:auto; font-family:'JetBrains Mono', monospace;"></pre>
+            </div>
+          `;
+        },
+        onOpen: (win) => {
+          const editor = ace.edit(win.querySelector('#code-editor'));
+          editor.setTheme('ace/theme/twilight');
+          editor.session.setMode('ace/mode/javascript');
+          editor.setValue(localStorage.getItem('neo_last_snippet') || `console.log('Hello, Photon World!');`, -1);
+
+          const modeMap = {
+            javascript: 'ace/mode/javascript',
+            html: 'ace/mode/html',
+            css: 'ace/mode/css',
+            python: 'ace/mode/python'
+          };
+
+          win.querySelector('#language-select').addEventListener('change', (e) => {
+            editor.session.setMode(modeMap[e.target.value]);
+          });
+
+          win.querySelector('#run-code').addEventListener('click', async () => {
+            const lang = win.querySelector('#language-select').value;
+            const code = editor.getValue();
+            localStorage.setItem('neo_last_snippet', code);
+            const log = win.querySelector('#execution-log');
+            const preview = win.querySelector('#preview');
+            log.textContent = '';
+
+            if (lang === 'javascript') {
+              try {
+                const result = Function(code)();
+                log.textContent = result === undefined ? 'Executed without explicit return.' : String(result);
+              } catch (err) {
+                log.textContent = err.toString();
+              }
+            } else if (lang === 'html') {
+              preview.srcdoc = code;
+              log.textContent = 'Preview refreshed with HTML snippet.';
+            } else if (lang === 'css') {
+              preview.srcdoc = `<html><head><style>${code}</style></head><body><h3>CSS Canvas</h3><p>Your styles are active in this iframe.</p></body></html>`;
+              log.textContent = 'Isolated CSS sandbox updated.';
+            } else if (lang === 'python') {
+              log.textContent = 'Loading Pyodide…';
+              await ensurePyodide();
+              try {
+                const pyResult = await window.pyodide.runPythonAsync(code);
+                log.textContent = String(pyResult ?? 'Executed via Pyodide.');
+              } catch (error) {
+                log.textContent = error.message;
+              }
+            }
+          });
+
+          win.querySelector('#save-snippet').addEventListener('click', () => {
+            const snippets = JSON.parse(localStorage.getItem('neo_snippet_vault') || '[]');
+            snippets.unshift({
+              ts: new Date().toISOString(),
+              lang: win.querySelector('#language-select').value,
+              code: editor.getValue()
+            });
+            localStorage.setItem('neo_snippet_vault', JSON.stringify(snippets.slice(0, 8)));
+            toast('Snippet preserved in the quantum vault.');
+          });
+
+          win.querySelector('#load-snippet').addEventListener('click', () => {
+            const snippets = JSON.parse(localStorage.getItem('neo_snippet_vault') || '[]');
+            if (!snippets.length) {
+              toast('Vault is empty — time to craft some code spells.');
+              return;
+            }
+            const options = snippets.map((s, i) => `${i + 1}. [${s.lang}] ${new Date(s.ts).toLocaleString()}`).join('\n');
+            const index = prompt(`Retrieve which snippet?\n${options}`);
+            const chosen = snippets[Number(index) - 1];
+            if (chosen) {
+              win.querySelector('#language-select').value = chosen.lang;
+              editor.session.setMode(modeMap[chosen.lang]);
+              editor.setValue(chosen.code, -1);
+            }
+          });
+        }
+      },
+      {
+        id: 'astro-terminal',
+        name: 'Nebula Terminal',
+        glyph: '🪐',
+        description: 'Python, cosmic commands & system lore',
+        iconHint: 'Summon the CLI orbits',
+        desktop: true,
+        content: () => {
+          return `
+            <div id="terminal-output"></div>
+            <input id="terminal-input" placeholder="> run python or /help" />
+          `;
+        },
+        onOpen: (win) => {
+          const output = win.querySelector('#terminal-output');
+          const input = win.querySelector('#terminal-input');
+          const history = [];
+          let index = 0;
+
+          const banner = 'Nebula Terminal v1.0 – type /help for commands.';
+          output.textContent = banner + '\n';
+
+          const commands = {
+            '/help': () => {
+              return `Available commands:\n/help – show commands\n/time – cosmic clock\n/motd – message of the day\n/clear – clear terminal\n/runpy <code> – execute inline Python\n/sysinfo – diagnostics snapshot`;
+            },
+            '/time': () => new Date().toLocaleString(),
+            '/motd': () => '“Systems check: creativity levels at 104%.”',
+            '/clear': () => {
+              output.textContent = '';
+              return 'Screen cleared.';
+            },
+            '/sysinfo': () => {
+              return JSON.stringify({
+                uptime: `${Math.round(performance.now() / 1000)}s`,
+                memory: navigator.deviceMemory || 'mystery',
+                cores: navigator.hardwareConcurrency,
+                agent: navigator.userAgent
+              }, null, 2);
+            }
+          };
+
+          input.addEventListener('keydown', async (e) => {
+            if (e.key === 'Enter') {
+              const command = input.value.trim();
+              if (!command) return;
+              history.unshift(command);
+              index = 0;
+              output.textContent += `\n> ${command}\n`;
+              input.value = '';
+
+              if (command.startsWith('/runpy')) {
+                await ensurePyodide();
+                const code = command.replace('/runpy', '').trim();
+                try {
+                  const result = await window.pyodide.runPythonAsync(code);
+                  output.textContent += String(result ?? '');
+                } catch (err) {
+                  output.textContent += err.toString();
+                }
+              } else if (command.startsWith('python')) {
+                await ensurePyodide();
+                const code = command.replace('python', '').trim();
+                try {
+                  const result = await window.pyodide.runPythonAsync(code);
+                  output.textContent += String(result ?? '');
+                } catch (error) {
+                  output.textContent += error.toString();
+                }
+              } else if (command in commands) {
+                const response = await commands[command]();
+                if (command !== '/clear') {
+                  output.textContent += response + '\n';
+                }
+              } else {
+                output.textContent += `Unknown command: ${command}\n`;
+              }
+              output.scrollTop = output.scrollHeight;
+            } else if (e.key === 'ArrowUp') {
+              input.value = history[index] || '';
+              index = Math.min(index + 1, history.length - 1);
+            } else if (e.key === 'ArrowDown') {
+              index = Math.max(index - 1, 0);
+              input.value = history[index] || '';
+            }
+          });
+        }
+      },
+      {
+        id: 'star-painter',
+        name: 'Aurora Paint Lab',
+        glyph: '🎨',
+        description: 'Multi-layer neon canvas',
+        iconHint: 'Sketch constellations',
+        desktop: true,
+        content: () => {
+          return `
+            <div class="paint-toolbar">
+              <label>Color <input type="color" id="paint-color" value="#37d7ff" /></label>
+              <label>Size <input type="range" id="paint-size" min="1" max="36" value="6" /></label>
+              <button id="paint-clear">Clear</button>
+              <button id="paint-export">Export PNG</button>
+            </div>
+            <canvas id="paint-canvas" width="800" height="400"></canvas>
+          `;
+        },
+        onOpen: (win) => {
+          const canvas = win.querySelector('#paint-canvas');
+          const ctx = canvas.getContext('2d');
+          ctx.fillStyle = '#03040f';
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+          let painting = false;
+          const colorInput = win.querySelector('#paint-color');
+          const sizeInput = win.querySelector('#paint-size');
+
+          const draw = (x, y) => {
+            ctx.fillStyle = colorInput.value;
+            ctx.shadowColor = colorInput.value;
+            ctx.shadowBlur = 10;
+            ctx.beginPath();
+            ctx.arc(x, y, Number(sizeInput.value), 0, Math.PI * 2);
+            ctx.fill();
+          };
+
+          const getPos = (e) => {
+            const rect = canvas.getBoundingClientRect();
+            const x = (e.touches ? e.touches[0].clientX : e.clientX) - rect.left;
+            const y = (e.touches ? e.touches[0].clientY : e.clientY) - rect.top;
+            return { x, y };
+          };
+
+          const start = (e) => {
+            painting = true;
+            const { x, y } = getPos(e);
+            draw(x, y);
+          };
+
+          const move = (e) => {
+            if (!painting) return;
+            const { x, y } = getPos(e);
+            draw(x, y);
+          };
+
+          const end = () => painting = false;
+
+          canvas.addEventListener('mousedown', start);
+          canvas.addEventListener('mousemove', move);
+          canvas.addEventListener('mouseup', end);
+          canvas.addEventListener('mouseleave', end);
+          canvas.addEventListener('touchstart', start);
+          canvas.addEventListener('touchmove', move);
+          canvas.addEventListener('touchend', end);
+
+          win.querySelector('#paint-clear').addEventListener('click', () => {
+            ctx.fillStyle = '#03040f';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+          });
+
+          win.querySelector('#paint-export').addEventListener('click', () => {
+            const link = document.createElement('a');
+            link.download = `aurora-${Date.now()}.png`;
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+          });
+        }
+      },
+      {
+        id: 'quantum-file',
+        name: 'Quantum File Navigator',
+        glyph: '🗂️',
+        description: 'LocalStorage-backed orbital filesystem',
+        iconHint: 'Curate data constellations',
+        desktop: true,
+        content: () => {
+          return `
+            <div class="toolbar">
+              <button id="new-file">New File</button>
+              <button id="new-folder">New Folder</button>
+              <button id="delete-node">Delete</button>
+              <button id="export-vault">Export Vault</button>
+            </div>
+            <div class="file-manager">
+              <div class="file-tree" id="file-tree"></div>
+              <div class="file-preview">
+                <div class="badge">Preview</div>
+                <textarea id="file-preview-area" style="height:260px;"></textarea>
+                <button id="save-file" style="margin-top:12px;">Save</button>
+              </div>
+            </div>
+          `;
+        },
+        onOpen: (win) => {
+          const tree = win.querySelector('#file-tree');
+          const preview = win.querySelector('#file-preview-area');
+          let selectedPath = null;
+
+          const defaultFS = {
+            'Welcome.txt': 'This vault is powered by your browser.\nFeel free to create cosmic documents.'
+          };
+          const loadFS = () => JSON.parse(localStorage.getItem('neo_fs') || JSON.stringify(defaultFS));
+
+          const saveFS = (fs) => {
+            localStorage.setItem('neo_fs', JSON.stringify(fs));
+          };
+
+          const renderTree = () => {
+            tree.innerHTML = '';
+            const fs = loadFS();
+            const renderNode = (obj, path = []) => {
+              Object.keys(obj).forEach(key => {
+                const value = obj[key];
+                const node = document.createElement('div');
+                node.className = 'file-node';
+                const currentPath = [...path, key];
+                node.dataset.path = JSON.stringify(currentPath);
+                node.innerHTML = `<span>${key}</span><span>${typeof value === 'string' ? '📝' : '📁'}</span>`;
+                node.addEventListener('click', () => {
+                  selectedPath = currentPath;
+                  tree.querySelectorAll('.file-node').forEach(n => n.style.background = '');
+                  node.style.background = 'rgba(122,92,255,0.35)';
+                  if (typeof value === 'string') {
+                    preview.value = value;
+                  } else {
+                    preview.value = JSON.stringify(value, null, 2);
+                  }
+                });
+                tree.appendChild(node);
+                if (typeof value === 'object') {
+                  renderNode(value, currentPath);
+                }
+              });
+            };
+            renderNode(fs);
+          };
+
+          const getFS = () => loadFS();
+
+          const getByPath = (obj, path) => {
+            return path.reduce((acc, key) => acc?.[key], obj);
+          };
+
+          const setByPath = (obj, path, value) => {
+            let pointer = obj;
+            for (let i = 0; i < path.length - 1; i++) {
+              const key = path[i];
+              pointer[key] = pointer[key] || {};
+              pointer = pointer[key];
+            }
+            pointer[path[path.length - 1]] = value;
+          };
+
+          const deleteByPath = (obj, path) => {
+            let pointer = obj;
+            for (let i = 0; i < path.length - 1; i++) {
+              pointer = pointer[path[i]];
+            }
+            delete pointer[path[path.length - 1]];
+          };
+
+          renderTree();
+
+          win.querySelector('#new-file').addEventListener('click', () => {
+            const name = prompt('File name');
+            if (!name) return;
+            const fs = getFS();
+            fs[name] = '';
+            saveFS(fs);
+            renderTree();
+          });
+
+          win.querySelector('#new-folder').addEventListener('click', () => {
+            const name = prompt('Folder name');
+            if (!name) return;
+            const fs = getFS();
+            fs[name] = {};
+            saveFS(fs);
+            renderTree();
+          });
+
+          win.querySelector('#delete-node').addEventListener('click', () => {
+            if (!selectedPath) {
+              toast('Select a node to delete.');
+              return;
+            }
+            const fs = getFS();
+            deleteByPath(fs, selectedPath);
+            saveFS(fs);
+            renderTree();
+            preview.value = '';
+            selectedPath = null;
+          });
+
+          win.querySelector('#save-file').addEventListener('click', () => {
+            if (!selectedPath) {
+              toast('Select a file first.');
+              return;
+            }
+            const fs = getFS();
+            const current = getByPath(fs, selectedPath);
+            if (typeof current === 'object') {
+              try {
+                const parsed = JSON.parse(preview.value || '{}');
+                setByPath(fs, selectedPath, parsed);
+              } catch (err) {
+                toast('Folder expects JSON structure. Fix syntax to save.');
+                return;
+              }
+            } else {
+              setByPath(fs, selectedPath, preview.value);
+            }
+            saveFS(fs);
+            toast('File saved to vault.');
+          });
+
+          win.querySelector('#export-vault').addEventListener('click', () => {
+            const fs = getFS();
+            const blob = new Blob([JSON.stringify(fs, null, 2)], { type: 'application/json' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = 'quantum-vault.json';
+            link.click();
+          });
+        }
+      },
+      {
+        id: 'cosmic-game',
+        name: 'Orbital Drift Arcade',
+        glyph: '🕹️',
+        description: 'Avoid rogue asteroids in synthwave space',
+        iconHint: 'Pilot the aurora glider',
+        desktop: true,
+        content: () => {
+          return `
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <div>
+                <div class="badge">High Score</div>
+                <div id="high-score">0</div>
+              </div>
+              <button id="start-game">Launch Mission</button>
+            </div>
+            <canvas id="game-canvas" width="600" height="280"></canvas>
+            <div style="font-size:0.85rem; color:var(--muted); margin-top:8px;">Use ← → arrows to glide. Collect energy rings, dodge asteroids.</div>
+          `;
+        },
+        onOpen: (win) => {
+          const canvas = win.querySelector('#game-canvas');
+          const ctx = canvas.getContext('2d');
+          const startBtn = win.querySelector('#start-game');
+          const highScoreEl = win.querySelector('#high-score');
+          let running = false;
+          let score = 0;
+          let high = Number(localStorage.getItem('neo_high_score') || 0);
+          highScoreEl.textContent = high;
+
+          const player = { x: 280, y: 220, w: 40, h: 20, vx: 0 };
+          const debris = [];
+          const rings = [];
+
+          const reset = () => {
+            player.x = 280;
+            player.vx = 0;
+            score = 0;
+            debris.length = 0;
+            rings.length = 0;
+          };
+
+          const spawnDebris = () => {
+            debris.push({ x: Math.random() * canvas.width, y: -30, size: 20 + Math.random() * 30, speed: 2 + Math.random() * 3 });
+          };
+
+          const spawnRing = () => {
+            rings.push({ x: Math.random() * (canvas.width - 30), y: -30, size: 16, speed: 2.5 });
+          };
+
+          const draw = () => {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+            gradient.addColorStop(0, 'rgba(122, 92, 255, 0.4)');
+            gradient.addColorStop(1, 'rgba(5, 8, 18, 0.95)');
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            ctx.fillStyle = 'rgba(55, 215, 255, 0.85)';
+            ctx.beginPath();
+            ctx.moveTo(player.x, player.y);
+            ctx.lineTo(player.x + player.w / 2, player.y - 30);
+            ctx.lineTo(player.x + player.w, player.y);
+            ctx.closePath();
+            ctx.fill();
+
+            debris.forEach(d => {
+              ctx.fillStyle = 'rgba(255, 95, 150, 0.9)';
+              ctx.beginPath();
+              ctx.arc(d.x, d.y, d.size, 0, Math.PI * 2);
+              ctx.fill();
+            });
+
+            rings.forEach(r => {
+              ctx.strokeStyle = 'rgba(173, 255, 90, 0.9)';
+              ctx.lineWidth = 4;
+              ctx.beginPath();
+              ctx.arc(r.x, r.y, r.size, 0, Math.PI * 2);
+              ctx.stroke();
+            });
+
+            ctx.fillStyle = 'rgba(255,255,255,0.8)';
+            ctx.font = '16px "JetBrains Mono"';
+            ctx.fillText(`Score: ${score}`, 10, 20);
+          };
+
+          const update = () => {
+            if (!running) return;
+            if (Math.random() < 0.03) spawnDebris();
+            if (Math.random() < 0.02) spawnRing();
+
+            player.x += player.vx;
+            player.x = Math.max(0, Math.min(canvas.width - player.w, player.x));
+
+            debris.forEach(d => d.y += d.speed);
+            rings.forEach(r => r.y += r.speed);
+
+            for (let i = debris.length - 1; i >= 0; i--) {
+              const d = debris[i];
+              if (d.y - d.size > canvas.height) {
+                debris.splice(i, 1);
+                continue;
+              }
+              if (d.x > player.x && d.x < player.x + player.w && d.y > player.y - 30 && d.y < player.y + player.h) {
+                running = false;
+                toast('Impact detected! Flight logged.');
+                if (score > high) {
+                  high = score;
+                  localStorage.setItem('neo_high_score', high);
+                  highScoreEl.textContent = high;
+                }
+              }
+            }
+
+            for (let i = rings.length - 1; i >= 0; i--) {
+              const r = rings[i];
+              if (r.y - r.size > canvas.height) {
+                rings.splice(i, 1);
+                continue;
+              }
+              if (Math.abs((r.x) - (player.x + player.w / 2)) < r.size && Math.abs((r.y) - (player.y - 10)) < r.size) {
+                rings.splice(i, 1);
+                score += 42;
+                toast('Energy ring secured! +42 flux.');
+              }
+            }
+
+            draw();
+            requestAnimationFrame(update);
+          };
+
+          const loop = () => {
+            draw();
+            if (running) requestAnimationFrame(update);
+          };
+
+          startBtn.addEventListener('click', () => {
+            reset();
+            running = true;
+            loop();
+          });
+
+          document.addEventListener('keydown', (e) => {
+            if (!running) return;
+            if (e.key === 'ArrowLeft') player.vx = -5;
+            if (e.key === 'ArrowRight') player.vx = 5;
+          });
+
+          document.addEventListener('keyup', (e) => {
+            if (['ArrowLeft', 'ArrowRight'].includes(e.key)) player.vx = 0;
+          });
+
+          draw();
+        }
+      },
+      {
+        id: 'video-studio',
+        name: 'Lumen Video Atelier',
+        glyph: '🎬',
+        description: 'Clip layering, filters & instant stories',
+        iconHint: 'Spin a micro-movie',
+        desktop: true,
+        content: () => {
+          return `
+            <div class="toolbar">
+              <input type="url" id="video-url" placeholder="Paste video URL (MP4/WebM)" style="flex:1;" />
+              <button id="add-clip">Add Clip</button>
+              <button id="record-clip">Record Camera</button>
+            </div>
+            <video id="video-player" controls style="width:100%; border-radius:16px; background:#050810;"></video>
+            <div class="toolbar" style="margin-top:12px;">
+              <label>Filter
+                <select id="video-filter">
+                  <option value="none">None</option>
+                  <option value="grayscale(80%)">Noir</option>
+                  <option value="sepia(70%)">Solar Sepia</option>
+                  <option value="contrast(1.4) saturate(1.6)">Hypercolor</option>
+                  <option value="hue-rotate(160deg)">Aurora</option>
+                </select>
+              </label>
+              <label>Speed <input type="range" id="video-speed" min="0.5" max="2" step="0.1" value="1" /></label>
+              <button id="export-story">Export Storyboard</button>
+            </div>
+            <div class="timeline" id="clip-timeline"></div>
+          `;
+        },
+        onOpen: (win) => {
+          const player = win.querySelector('#video-player');
+          const urlInput = win.querySelector('#video-url');
+          const timeline = win.querySelector('#clip-timeline');
+          const filterSelect = win.querySelector('#video-filter');
+          const speedInput = win.querySelector('#video-speed');
+          let clips = JSON.parse(localStorage.getItem('neo_clips') || '[]');
+          const recordedStreams = [];
+
+          const persistClips = () => {
+            const serializable = clips.filter(clip => clip.type === 'url');
+            localStorage.setItem('neo_clips', JSON.stringify(serializable));
+          };
+
+          const renderTimeline = () => {
+            timeline.innerHTML = '';
+            clips.forEach((clip, index) => {
+              const card = document.createElement('div');
+              card.className = 'clip-card';
+              card.innerHTML = `
+                <strong>Clip ${index + 1}</strong>
+                <div>${clip.type === 'recorded' ? 'Recorded stream' : clip.url}</div>
+                <button data-index="${index}" class="play-clip">Play</button>
+                <button data-index="${index}" class="remove-clip">Remove</button>
+              `;
+              timeline.appendChild(card);
+            });
+            persistClips();
+          };
+
+          timeline.addEventListener('click', (e) => {
+            if (e.target.classList.contains('play-clip')) {
+              const clip = clips[e.target.dataset.index];
+              if (clip.type === 'url') {
+                if (player.srcObject) {
+                  player.srcObject.getTracks().forEach(track => track.stop());
+                  player.srcObject = null;
+                }
+                player.src = clip.url;
+                player.play();
+              } else if (clip.type === 'recorded') {
+                player.pause();
+                player.src = '';
+                player.srcObject = clip.stream;
+                player.play();
+              }
+            }
+            if (e.target.classList.contains('remove-clip')) {
+              const removed = clips.splice(e.target.dataset.index, 1)[0];
+              if (removed?.type === 'recorded' && removed.stream) {
+                removed.stream.getTracks().forEach(track => track.stop());
+                const idx = recordedStreams.indexOf(removed.stream);
+                if (idx >= 0) recordedStreams.splice(idx, 1);
+              }
+              renderTimeline();
+            }
+          });
+
+          win.querySelector('#add-clip').addEventListener('click', () => {
+            const url = urlInput.value;
+            if (!url) {
+              toast('Paste a valid video URL.');
+              return;
+            }
+            clips.push({ type: 'url', url });
+            renderTimeline();
+            urlInput.value = '';
+          });
+
+          win.querySelector('#record-clip').addEventListener('click', async () => {
+            try {
+              const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+              player.srcObject = stream;
+              player.play();
+              clips.push({ type: 'recorded', stream });
+              recordedStreams.push(stream);
+              renderTimeline();
+              toast('Camera stream added as a live clip.');
+            } catch (err) {
+              toast('Camera permissions required for recording.');
+            }
+          });
+
+          filterSelect.addEventListener('change', () => {
+            player.style.filter = filterSelect.value;
+          });
+
+          speedInput.addEventListener('input', () => {
+            player.playbackRate = Number(speedInput.value);
+          });
+
+          win.querySelector('#export-story').addEventListener('click', () => {
+            const story = clips.map((clip, i) => `Scene ${i + 1}: ${clip.type === 'url' ? clip.url : 'Recorded stream'}`).join('\n');
+            const blob = new Blob([story], { type: 'text/plain' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = 'lumen-storyboard.txt';
+            link.click();
+          });
+
+          renderTimeline();
+          win.cleanup = () => {
+            recordedStreams.forEach(stream => stream.getTracks().forEach(track => track.stop()));
+            if (player.srcObject) {
+              player.srcObject.getTracks().forEach(track => track.stop());
+              player.srcObject = null;
+            }
+          };
+        }
+      }
+    ];
+
+    function createIcon(app) {
+      const icon = document.createElement('div');
+      icon.className = 'desktop-icon';
+      icon.innerHTML = `<div class="icon-glyph">${app.glyph}</div><span>${app.name}</span>`;
+      icon.addEventListener('dblclick', () => openApp(app.id));
+      icon.title = app.iconHint;
+      desktop.appendChild(icon);
+    }
+
+    function createStartTile(app) {
+      const tile = document.createElement('div');
+      tile.className = 'start-tile';
+      tile.innerHTML = `<div class="icon-glyph" style="font-size:2rem;">${app.glyph}</div><strong>${app.name}</strong><span>${app.description}</span>`;
+      tile.addEventListener('click', () => {
+        openApp(app.id);
+        toggleStartMenu(false);
+      });
+      document.getElementById('start-grid').appendChild(tile);
+    }
+
+    const openWindows = new Map();
+    let zIndexCounter = 900;
+
+    function openApp(id) {
+      const app = apps.find(a => a.id === id);
+      if (!app) return;
+      if (openWindows.has(id)) {
+        const win = openWindows.get(id);
+        win.style.display = 'flex';
+        win.classList.add('active');
+        focusWindow(win);
+        return;
+      }
+      const template = document.getElementById('window-template');
+      const win = template.content.firstElementChild.cloneNode(true);
+      win.dataset.app = app.id;
+      win.querySelector('.window-title').textContent = app.name;
+      win.querySelector('.window-content').innerHTML = app.content();
+      windowsLayer.appendChild(win);
+      openWindows.set(id, win);
+      attachWindowControls(win);
+      focusWindow(win);
+      app.onOpen?.(win);
+      addToTaskbar(app);
+      toast(`${app.name} booted.`);
+    }
+
+    function attachWindowControls(win) {
+      const closeBtn = win.querySelector('.close');
+      const minBtn = win.querySelector('.minimize');
+      const header = win.querySelector('.window-header');
+      let isDragging = false;
+      let offsetX = 0;
+      let offsetY = 0;
+
+      closeBtn.addEventListener('click', () => closeApp(win.dataset.app));
+      minBtn.addEventListener('click', () => minimizeApp(win.dataset.app));
+
+      header.addEventListener('mousedown', (e) => {
+        isDragging = true;
+        offsetX = e.clientX - win.offsetLeft;
+        offsetY = e.clientY - win.offsetTop;
+        focusWindow(win);
+      });
+
+      document.addEventListener('mousemove', (e) => {
+        if (!isDragging) return;
+        win.style.left = e.clientX - offsetX + 'px';
+        win.style.top = e.clientY - offsetY + 'px';
+      });
+
+      document.addEventListener('mouseup', () => {
+        isDragging = false;
+      });
+
+      win.addEventListener('mousedown', () => focusWindow(win));
+    }
+
+    function focusWindow(win) {
+      zIndexCounter += 1;
+      win.style.zIndex = zIndexCounter;
+      win.classList.add('active');
+      win.style.display = 'flex';
+      taskbarApps.querySelectorAll('.taskbar-item').forEach(item => {
+        item.classList.toggle('active', item.dataset.app === win.dataset.app);
+      });
+    }
+
+    function closeApp(id) {
+      const win = openWindows.get(id);
+      if (!win) return;
+      if (typeof win.cleanup === 'function') {
+        try {
+          win.cleanup();
+        } catch (err) {
+          console.warn('Cleanup error', err);
+        }
+      }
+      win.remove();
+      openWindows.delete(id);
+      const item = taskbarApps.querySelector(`[data-app="${id}"]`);
+      item?.remove();
+    }
+
+    function minimizeApp(id) {
+      const win = openWindows.get(id);
+      if (!win) return;
+      win.style.display = 'none';
+      win.classList.remove('active');
+      taskbarApps.querySelectorAll('.taskbar-item').forEach(item => {
+        item.classList.toggle('active', false);
+      });
+    }
+
+    function addToTaskbar(app) {
+      if (taskbarApps.querySelector(`[data-app="${app.id}"]`)) {
+        taskbarApps.querySelectorAll('.taskbar-item').forEach(item => {
+          item.classList.toggle('active', item.dataset.app === app.id);
+        });
+        return;
+      }
+      const item = document.createElement('div');
+      item.className = 'taskbar-item active';
+      item.textContent = app.name;
+      item.dataset.app = app.id;
+      item.addEventListener('click', () => {
+        const win = openWindows.get(app.id);
+        if (!win) return;
+        if (win.style.display === 'none') {
+          win.style.display = 'flex';
+          win.classList.add('active');
+          focusWindow(win);
+        } else {
+          const currentlyActive = win.classList.contains('active');
+          if (currentlyActive) {
+            minimizeApp(app.id);
+          } else {
+            focusWindow(win);
+          }
+        }
+      });
+      taskbarApps.appendChild(item);
+      taskbarApps.querySelectorAll('.taskbar-item').forEach(other => {
+        other.classList.toggle('active', other === item);
+      });
+    }
+
+    function toggleStartMenu(force) {
+      if (typeof force === 'boolean') {
+        startMenu.classList.toggle('active', force);
+      } else {
+        startMenu.classList.toggle('active');
+      }
+    }
+
+    startButton.addEventListener('click', () => toggleStartMenu());
+
+    document.addEventListener('click', (e) => {
+      if (!startMenu.contains(e.target) && !startButton.contains(e.target)) {
+        toggleStartMenu(false);
+      }
+    });
+
+    apps.forEach(app => {
+      createStartTile(app);
+      if (app.desktop) createIcon(app);
+    });
+
+    function updateClock() {
+      const now = new Date();
+      taskbarClock.textContent = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+      requestAnimationFrame(updateClock);
+    }
+    updateClock();
+
+    function toast(message) {
+      notification.textContent = message;
+      notification.style.display = 'block';
+      notification.style.opacity = '1';
+      setTimeout(() => {
+        notification.style.transition = 'opacity 0.5s';
+        notification.style.opacity = '0';
+        setTimeout(() => {
+          notification.style.display = 'none';
+          notification.style.transition = '';
+        }, 500);
+      }, 1800);
+    }
+
+    async function ensurePyodide() {
+      if (!window.pyodideReadyPromise) {
+        window.pyodideReadyPromise = loadPyodide({ indexURL: 'https://cdn.jsdelivr.net/pyodide/v0.23.4/full/' });
+        toast('Summoning Pyodide core…');
+      }
+      window.pyodide = await window.pyodideReadyPromise;
+      return window.pyodide;
+    }
+
+    // Diagnostics panel animated values
+    const diagnosticEntries = [
+      { label: 'Photon Charge', value: 82 },
+      { label: 'GPU Flux', value: 64 },
+      { label: 'Memory Nebula', value: 48 },
+      { label: 'Dream Cache', value: 92 }
+    ];
+
+    const diagContainer = document.getElementById('diagnostics');
+    diagnosticEntries.forEach(entry => {
+      const card = document.createElement('div');
+      card.className = 'meter';
+      card.innerHTML = `<strong>${entry.label}</strong><div class="meter-bar"><div class="meter-fill" style="width:${entry.value}%"></div></div><div style="font-size:0.75rem; color:var(--muted);">${entry.value}% stabilized</div>`;
+      diagContainer.appendChild(card);
+    });
+
+    setInterval(() => {
+      diagContainer.querySelectorAll('.meter-fill').forEach(fill => {
+        const jitter = Math.max(10, Math.min(100, Number(fill.style.width.replace('%', '')) + (Math.random() * 10 - 5)));
+        fill.style.width = jitter + '%';
+      });
+    }, 2800);
+  </script>
+</body>
+</html>
